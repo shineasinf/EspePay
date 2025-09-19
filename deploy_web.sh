@@ -29,7 +29,7 @@ if [ ! -f ".nojekyll" ]; then
 fi
 
 # Ganti base href di index.html
-sed -i '' 's|<base href="/">|<base href="/EduConnect/">|' index.html
+sed -i '' 's|<base href="/">|<base href="/EspePay/">|' index.html
 
 # Commit dan push
 git add .
