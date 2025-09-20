@@ -3,222 +3,142 @@
 // Flutter stable + null-safety
 
 import 'package:flutter/material.dart';
+import 'package:lottie/lottie.dart';
+import 'dart:math';
+
+enum Role {
+  parent,
+  student,
+  teacher,
+}
 
 void main() => runApp(EspePayApp());
+
+/// global theme controller so Profile can toggle light/dark quickly
+final ValueNotifier<ThemeMode> _themeModeNotifier = ValueNotifier(ThemeMode.system);
 
 class EspePayApp extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
-    return MaterialApp(
-      title: 'EspePay',
-      debugShowCheckedModeBanner: false,
-      theme: _buildLightTheme(),
-      darkTheme: _buildDarkTheme(),
-      themeMode: ThemeMode.system,
-      home: SplashScreen(),
-    );
-  }
-}
-
-ThemeData _buildLightTheme() {
-  const burgundy = Color(0xFF800020);
-  const accent = Color(0xFF1976D2);
-  return ThemeData(
-    useMaterial3: true,
-    colorScheme: ColorScheme.fromSeed(seedColor: burgundy, primary: burgundy, secondary: accent),
-    scaffoldBackgroundColor: Colors.grey[50],
-    appBarTheme: const AppBarTheme(backgroundColor: burgundy, foregroundColor: Colors.white),
-    floatingActionButtonTheme: const FloatingActionButtonThemeData(backgroundColor: burgundy),
-    cardTheme: const CardThemeData(shape: RoundedRectangleBorder(borderRadius: BorderRadius.all(Radius.circular(12))), elevation: 2),
-    visualDensity: VisualDensity.adaptivePlatformDensity,
-  );
-}
-
-ThemeData _buildDarkTheme() {
-  const burgundy = Color(0xFF800020);
-  const accent = Color(0xFF1976D2);
-  return ThemeData.dark().copyWith(
-    useMaterial3: true,
-    colorScheme: const ColorScheme.dark(primary: burgundy, secondary: accent),
-    appBarTheme: const AppBarTheme(backgroundColor: burgundy, foregroundColor: Colors.white),
-    floatingActionButtonTheme: const FloatingActionButtonThemeData(backgroundColor: burgundy),
-  );
-}
-
-// -------------------- Splash screen with simple walking animation --------------------
-class SplashScreen extends StatefulWidget {
-  @override
-  State<SplashScreen> createState() => _SplashScreenState();
-}
-
-class _SplashScreenState extends State<SplashScreen> with SingleTickerProviderStateMixin {
-  late final AnimationController _ctrl;
-  late final Animation<double> _walkAnim;
-  late final Animation<double> _bobAnim;
-
-  @override
-  void initState() {
-    super.initState();
-    _ctrl = AnimationController(vsync: this, duration: const Duration(seconds: 3));
-    _walkAnim = CurvedAnimation(parent: _ctrl, curve: Curves.easeInOut);
-    _bobAnim = Tween<double>(begin: -6, end: 6).animate(CurvedAnimation(parent: _ctrl, curve: Curves.easeInOutSine));
-
-    // loop a few times then go to login page
-    _ctrl.repeat(reverse: true);
-
-    // After some seconds, stop repeating and navigate
-    Future.delayed(const Duration(milliseconds: 2600), () async {
-      await _ctrl.animateTo(1.0, duration: const Duration(milliseconds: 300));
-      _ctrl.stop();
-      if (mounted) Navigator.of(context).pushReplacement(MaterialPageRoute(builder: (_) => LoginPage()));
-    });
-  }
-
-  @override
-  void dispose() {
-    _ctrl.dispose();
-    super.dispose();
-  }
-
-  @override
-  Widget build(BuildContext context) {
-    return Scaffold(
-      body: SafeArea(
-        child: Stack(
-          children: [
-            // background illustration (simple) - school silhouette
-            Positioned.fill(
-              child: Column(
-                mainAxisAlignment: MainAxisAlignment.end,
-                children: [
-                  Container(height: 140, color: Colors.transparent),
-                ],
-              ),
-            ),
-
-            // Title and subtitle
-            Align(
-              alignment: Alignment.topCenter,
-              child: Padding(
-                padding: const EdgeInsets.symmetric(vertical: 60.0, horizontal: 24),
-                child: Column(
-                  mainAxisSize: MainAxisSize.min,
-                  children: [
-                    Text('EspePay', style: Theme.of(context).textTheme.headlineLarge?.copyWith(fontWeight: FontWeight.bold)),
-                    const SizedBox(height: 8),
-                    Text('Aplikasi sekolah: bayar SPP, lihat rapor, dan beri kabar', textAlign: TextAlign.center, style: Theme.of(context).textTheme.bodyMedium),
-                  ],
-                ),
-              ),
-            ),
-
-            // Walking kid animation
-            AnimatedBuilder(
-              animation: _ctrl,
-              builder: (context, child) {
-                // horizontal position: move from left to center-right while animating
-                final screenWidth = MediaQuery.of(context).size.width;
-                final dx = -0.2 * screenWidth + (_walkAnim.value * 1.2 * screenWidth * 0.5);
-                final bob = _bobAnim.value * (1 - (_walkAnim.value - 0.5).abs() * 2).abs();
-                return Positioned(
-                  left: dx.clamp(0.0, screenWidth - 120.0),
-                  bottom: 90 + bob,
-                  child: child!,
-                );
-              },
-              child: const SizedBox(width: 120, height: 140, child: _WalkingKid()),
-            ),
-
-            // small loading indicator bottom
-            Align(alignment: Alignment.bottomCenter, child: Padding(padding: const EdgeInsets.only(bottom: 28.0), child: Column(mainAxisSize: MainAxisSize.min, children: const [CircularProgressIndicator(), SizedBox(height: 8), Text('Memuat...')])))
-          ],
-        ),
-      ),
-    );
-  }
-}
-
-// A very simple cartoon "walking kid" built from basic shapes.
-class _WalkingKid extends StatefulWidget {
-  const _WalkingKid();
-  @override
-  State<_WalkingKid> createState() => _WalkingKidState();
-}
-
-class _WalkingKidState extends State<_WalkingKid> with SingleTickerProviderStateMixin {
-  late final AnimationController _legCtrl;
-
-  @override
-  void initState() {
-    super.initState();
-    _legCtrl = AnimationController(vsync: this, duration: const Duration(milliseconds: 600))..repeat(reverse: true);
-  }
-
-  @override
-  void dispose() {
-    _legCtrl.dispose();
-    super.dispose();
-  }
-
-  @override
-  Widget build(BuildContext context) {
-    return AnimatedBuilder(
-      animation: _legCtrl,
-      builder: (context, child) {
-        final leftLeg = Tween<double>(begin: -0.25, end: 0.25).evaluate(_legCtrl);
-        final rightLeg = Tween<double>(begin: 0.25, end: -0.25).evaluate(_legCtrl);
-        return Stack(
-          children: [
-            // backpack
-            Positioned(
-              left: 6,
-              top: 28,
-              child: Container(width: 46, height: 46, decoration: BoxDecoration(color: Colors.blue[700], borderRadius: BorderRadius.circular(8))),
-            ),
-            // body
-            Positioned(
-              left: 30,
-              top: 34,
-              child: Container(width: 40, height: 56, decoration: BoxDecoration(color: Colors.orange[300], borderRadius: BorderRadius.circular(8))),
-            ),
-            // head
-            Positioned(
-              left: 36,
-              top: 6,
-              child: const CircleAvatar(radius: 18, backgroundColor: Colors.brown, child: Icon(Icons.person, color: Colors.white, size: 20)),
-            ),
-            // left arm
-            Positioned(
-              left: 14,
-              top: 46,
-              child: Transform.rotate(angle: leftLeg * 0.5, child: Container(width: 8, height: 34, decoration: BoxDecoration(color: Colors.orange[300], borderRadius: BorderRadius.circular(6)))),
-            ),
-            // right arm
-            Positioned(
-              left: 74,
-              top: 46,
-              child: Transform.rotate(angle: rightLeg * 0.5, child: Container(width: 8, height: 34, decoration: BoxDecoration(color: Colors.orange[300], borderRadius: BorderRadius.circular(6)))),
-            ),
-            // left leg
-            Positioned(
-              left: 36,
-              top: 86,
-              child: Transform.rotate(angle: leftLeg, alignment: Alignment.topCenter, child: Container(width: 10, height: 42, decoration: BoxDecoration(color: Colors.brown[700], borderRadius: BorderRadius.circular(6)))),
-            ),
-            // right leg
-            Positioned(
-              left: 58,
-              top: 86,
-              child: Transform.rotate(angle: rightLeg, alignment: Alignment.topCenter, child: Container(width: 10, height: 42, decoration: BoxDecoration(color: Colors.brown[700], borderRadius: BorderRadius.circular(6)))),
-            ),
-          ],
+    return ValueListenableBuilder<ThemeMode>(
+      valueListenable: _themeModeNotifier,
+      builder: (_, themeMode, __) {
+        return MaterialApp(
+          title: 'EspePay',
+          debugShowCheckedModeBanner: false,
+          theme: _buildLightTheme(),
+          darkTheme: _buildDarkTheme(),
+          themeMode: themeMode,
+          home: SplashSequenceScreen(), // two-stage splash -> login
         );
       },
     );
   }
 }
 
-// -------------------- Dummy Login Page --------------------
+ThemeData _buildLightTheme() {
+  const primary = Color(0xFF6C2E91);
+  const accent = Color(0xFF1E88E5);
+  return ThemeData(
+    useMaterial3: true,
+    colorScheme: ColorScheme.fromSeed(seedColor: primary, primary: primary, secondary: accent),
+    scaffoldBackgroundColor: Colors.grey[50],
+    appBarTheme: const AppBarTheme(backgroundColor: primary, foregroundColor: Colors.white),
+    floatingActionButtonTheme: const FloatingActionButtonThemeData(backgroundColor: primary),
+    cardTheme: const CardThemeData(
+      shape: RoundedRectangleBorder(borderRadius: BorderRadius.all(Radius.circular(12))),
+      elevation: 2,
+    ),
+    visualDensity: VisualDensity.adaptivePlatformDensity,
+  );
+}
+
+ThemeData _buildDarkTheme() {
+  const primary = Color(0xFF6C2E91);
+  const accent = Color(0xFF1E88E5);
+  return ThemeData.dark().copyWith(
+    useMaterial3: true,
+    colorScheme: const ColorScheme.dark(primary: primary, secondary: accent),
+    appBarTheme: const AppBarTheme(backgroundColor: primary, foregroundColor: Colors.white),
+    floatingActionButtonTheme: const FloatingActionButtonThemeData(backgroundColor: primary),
+    cardTheme: const CardThemeData(
+      shape: RoundedRectangleBorder(borderRadius: BorderRadius.all(Radius.circular(12))),
+      elevation: 2,
+    ),
+  );
+}
+
+// -------------------- Splash sequence --------------------
+class SplashSequenceScreen extends StatefulWidget {
+  @override
+  State<SplashSequenceScreen> createState() => _SplashSequenceScreenState();
+}
+
+class _SplashSequenceScreenState extends State<SplashSequenceScreen> {
+  @override
+  void initState() {
+    super.initState();
+    _runSequence();
+  }
+
+  Future<void> _runSequence() async {
+    await Future.delayed(const Duration(milliseconds: 100));
+    await Future.delayed(const Duration(seconds: 1));
+    if (!mounted) return;
+    Navigator.of(context).pushReplacement(MaterialPageRoute(builder: (_) => _SecondSplash()));
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      body: SafeArea(
+        child: Center(
+          child: SizedBox(
+            width: 220,
+            height: 220,
+            child: Lottie.asset('assets/animations/school_kid_walk.json', fit: BoxFit.contain, repeat: false),
+          ),
+        ),
+      ),
+    );
+  }
+}
+
+class _SecondSplash extends StatefulWidget {
+  @override
+  State<_SecondSplash> createState() => __SecondSplashState();
+}
+
+class __SecondSplashState extends State<_SecondSplash> {
+  @override
+  void initState() {
+    super.initState();
+    _next();
+  }
+
+  Future<void> _next() async {
+    await Future.delayed(const Duration(seconds: 1));
+    if (!mounted) return;
+    Navigator.of(context).pushReplacement(MaterialPageRoute(builder: (_) => LoginPage()));
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      body: SafeArea(
+        child: Center(
+          child: SizedBox(
+            width: 240,
+            height: 240,
+            child: Lottie.asset('assets/animations/espepay_splash.json', fit: BoxFit.contain, repeat: false),
+          ),
+        ),
+      ),
+    );
+  }
+}
+
+// -------------------- Login Page --------------------
 class LoginPage extends StatefulWidget {
   @override
   State<LoginPage> createState() => _LoginPageState();
@@ -230,6 +150,14 @@ class _LoginPageState extends State<LoginPage> {
   final _passCtrl = TextEditingController();
   bool _loading = false;
 
+  void _doLogin(Role role) async {
+    if (_formKey.currentState != null && !_formKey.currentState!.validate()) return;
+    setState(() => _loading = true);
+    await Future.delayed(const Duration(milliseconds: 800));
+    setState(() => _loading = false);
+    Navigator.of(context).pushReplacement(MaterialPageRoute(builder: (_) => HomeScreen(role: role)));
+  }
+
   @override
   void dispose() {
     _emailCtrl.dispose();
@@ -237,59 +165,91 @@ class _LoginPageState extends State<LoginPage> {
     super.dispose();
   }
 
-  void _doLogin() async {
-    if (!_formKey.currentState!.validate()) return;
-    setState(() => _loading = true);
-    await Future.delayed(const Duration(milliseconds: 900));
-    setState(() => _loading = false);
-
-    // Dummy route: go to role selector
-    Navigator.of(context).pushReplacement(MaterialPageRoute(builder: (_) => RoleSelectScreen()));
-  }
-
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(title: const Text('Login')),
-      body: Padding(
-        padding: const EdgeInsets.all(20.0),
-        child: Center(
+      body: Center(
+        child: SingleChildScrollView(
+          padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 24),
           child: ConstrainedBox(
-            constraints: const BoxConstraints(maxWidth: 420),
-            child: Card(
-              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-              child: Padding(
-                padding: const EdgeInsets.all(18.0),
-                child: Form(
-                  key: _formKey,
-                  child: Column(mainAxisSize: MainAxisSize.min, children: [
-                    Text('Masuk ke EspePay', style: Theme.of(context).textTheme.titleMedium?.copyWith(fontWeight: FontWeight.bold)),
-                    const SizedBox(height: 12),
-                    TextFormField(
-                      controller: _emailCtrl,
-                      decoration: const InputDecoration(prefixIcon: Icon(Icons.email), labelText: 'Email / Username'),
-                      validator: (v) => v == null || v.isEmpty ? 'Masukkan email atau username' : null,
-                    ),
-                    const SizedBox(height: 12),
-                    TextFormField(
-                      controller: _passCtrl,
-                      decoration: const InputDecoration(prefixIcon: Icon(Icons.lock), labelText: 'Password'),
-                      obscureText: true,
-                      validator: (v) => v == null || v.length < 4 ? 'Password minimal 4 karakter' : null,
-                    ),
-                    const SizedBox(height: 16),
-                    SizedBox(
-                      width: double.infinity,
-                      child: ElevatedButton(
-                        onPressed: _loading ? null : _doLogin,
-                        child: _loading ? const SizedBox(height: 18, width: 18, child: CircularProgressIndicator(strokeWidth: 2, color: Colors.white)) : const Text('Masuk'),
-                      ),
-                    ),
-                    const SizedBox(height: 8),
-                    TextButton(onPressed: () => Navigator.of(context).push(MaterialPageRoute(builder: (_) => RoleSelectScreen())), child: const Text('Lewati (Demo)'))
-                  ]),
+            constraints: const BoxConstraints(maxWidth: 520),
+            child: Column(
+              children: [
+                // === LOGO ANIMASI BARU ===
+                SizedBox(
+                  width: 160,
+                  height: 160,
+                  child: Lottie.asset('assets/animations/espepay_splash.json', fit: BoxFit.contain),
                 ),
-              ),
+                const SizedBox(height: 12),
+                Text(
+                  'Kelola pembayaran, absensi, dan pembelajaran sekolah',
+                  textAlign: TextAlign.center,
+                  style: Theme.of(context).textTheme.bodyMedium,
+                ),
+                const SizedBox(height: 20),
+                Card(
+                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                  child: Padding(
+                    padding: const EdgeInsets.all(18.0),
+                    child: Form(
+                      key: _formKey,
+                      child: Column(mainAxisSize: MainAxisSize.min, children: [
+                        TextFormField(
+                          controller: _emailCtrl,
+                          decoration: const InputDecoration(prefixIcon: Icon(Icons.person), labelText: 'Email / Username'),
+                          validator: (v) => v == null || v.isEmpty ? 'Masukkan email atau username' : null,
+                        ),
+                        const SizedBox(height: 12),
+                        TextFormField(
+                          controller: _passCtrl,
+                          obscureText: true,
+                          decoration: const InputDecoration(prefixIcon: Icon(Icons.lock), labelText: 'Password'),
+                          validator: (v) => v == null || v.length < 4 ? 'Password minimal 4 karakter' : null,
+                        ),
+                        const SizedBox(height: 16),
+                        SizedBox(
+                          width: double.infinity,
+                          child: ElevatedButton(
+                            onPressed: _loading ? null : () => _doLogin(Role.parent),
+                            child: _loading
+                                ? const SizedBox(height: 18, width: 18, child: CircularProgressIndicator(strokeWidth: 2, color: Colors.white))
+                                : const Text('Masuk (Orang Tua)'),
+                          ),
+                        ),
+                        const SizedBox(height: 12),
+                        Row(
+                          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                          children: [
+                            Expanded(
+                              child: OutlinedButton.icon(
+                                onPressed: () => _doLogin(Role.student),
+                                icon: const Icon(Icons.school),
+                                label: const Text('Masuk sebagai Siswa'),
+                              ),
+                            ),
+                            const SizedBox(width: 12),
+                            Expanded(
+                              child: OutlinedButton.icon(
+                                onPressed: () => _doLogin(Role.teacher),
+                                icon: const Icon(Icons.person_search),
+                                label: const Text('Masuk sebagai Guru'),
+                              ),
+                            ),
+                          ],
+                        ),
+                        const SizedBox(height: 8),
+                        TextButton(
+                          onPressed: () => Navigator.of(context).push(MaterialPageRoute(builder: (_) => RoleSelectScreen())),
+                          child: const Text('Lewati (pilih role manual)'),
+                        ),
+                      ]),
+                    ),
+                  ),
+                ),
+                const SizedBox(height: 12),
+                Text('Belum punya akun? Hubungi admin sekolah.', style: TextStyle(color: Colors.grey[600])),
+              ],
             ),
           ),
         ),
@@ -303,60 +263,52 @@ class RoleSelectScreen extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
+      appBar: AppBar(title: const Text('Pilih Role')),
       body: SafeArea(
         child: Padding(
-          padding: const EdgeInsets.all(20.0),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.stretch,
-            children: [
-              const SizedBox(height: 12),
-              Text('EspePay', style: Theme.of(context).textTheme.headlineSmall?.copyWith(fontWeight: FontWeight.bold)),
-              const SizedBox(height: 8),
-              Text('Aplikasi pembayaran & manajemen sekolah — untuk orang tua, siswa, dan guru.', style: Theme.of(context).textTheme.bodyMedium),
-              const SizedBox(height: 28),
-
-              _RoleCard(title: 'Wali Murid / Orang Tua', subtitle: 'Lihat tagihan SPP, rapor, chat wali kelas', icon: Icons.family_restroom, onTap: () => Navigator.push(context, MaterialPageRoute(builder: (_) => HomeScreen(role: Role.parent)))),
-              const SizedBox(height: 12),
-              _RoleCard(title: 'Siswa', subtitle: 'Lihat jadwal, materi, ekstrakurikuler', icon: Icons.school, onTap: () => Navigator.push(context, MaterialPageRoute(builder: (_) => HomeScreen(role: Role.student)))),
-              const SizedBox(height: 12),
-              _RoleCard(title: 'Guru / Wali Kelas', subtitle: 'Kelola presensi, nilai, pengumuman', icon: Icons.person_search, onTap: () => Navigator.push(context, MaterialPageRoute(builder: (_) => HomeScreen(role: Role.teacher)))),
-
-              const Spacer(),
-              Text('Demo: tekan role untuk masuk ke mockup', textAlign: TextAlign.center, style: TextStyle(color: Colors.grey[600])),
-            ],
-          ),
+          padding: const EdgeInsets.all(18.0),
+          child: Column(crossAxisAlignment: CrossAxisAlignment.stretch, children: [
+            const SizedBox(height: 8),
+            Text('Masuk sebagai', style: Theme.of(context).textTheme.titleLarge),
+            const SizedBox(height: 18),
+            _RoleCardLarge(title: 'Orang Tua / Wali Murid', subtitle: 'Lihat ringkasan anak & pembayaran', icon: Icons.family_restroom, onTap: () => Navigator.pushReplacement(context, MaterialPageRoute(builder: (_) => HomeScreen(role: Role.parent)))),
+            const SizedBox(height: 12),
+            _RoleCardLarge(title: 'Siswa', subtitle: 'Latihan & materi pembelajaran', icon: Icons.school, onTap: () => Navigator.pushReplacement(context, MaterialPageRoute(builder: (_) => HomeScreen(role: Role.student)))),
+            const SizedBox(height: 12),
+            _RoleCardLarge(title: 'Guru', subtitle: 'Kelola absensi & pengumuman', icon: Icons.person_search, onTap: () => Navigator.pushReplacement(context, MaterialPageRoute(builder: (_) => HomeScreen(role: Role.teacher)))),
+          ]),
         ),
       ),
     );
   }
 }
 
-class _RoleCard extends StatelessWidget {
+class _RoleCardLarge extends StatelessWidget {
   final String title, subtitle;
   final IconData icon;
   final VoidCallback onTap;
-  const _RoleCard({required this.title, required this.subtitle, required this.icon, required this.onTap});
+  const _RoleCardLarge({required this.title, required this.subtitle, required this.icon, required this.onTap});
   @override
   Widget build(BuildContext context) {
     return Card(
       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
       child: ListTile(
+        contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
         leading: CircleAvatar(backgroundColor: Theme.of(context).colorScheme.primaryContainer, child: Icon(icon, color: Theme.of(context).colorScheme.onPrimaryContainer)),
         title: Text(title, style: const TextStyle(fontWeight: FontWeight.w600)),
         subtitle: Text(subtitle),
-        trailing: Icon(Icons.arrow_forward_ios, size: 16),
+        trailing: const Icon(Icons.arrow_forward_ios, size: 16),
         onTap: onTap,
       ),
     );
   }
 }
 
-enum Role { parent, student, teacher }
-
-// -------------------- HomeScreen and rest of mockup (kept mostly same) --------------------
+// -------------------- HomeScreen --------------------
 class HomeScreen extends StatefulWidget {
   final Role role;
   const HomeScreen({required this.role});
+
   @override
   State<HomeScreen> createState() => _HomeScreenState();
 }
@@ -366,185 +318,337 @@ class _HomeScreenState extends State<HomeScreen> {
 
   @override
   Widget build(BuildContext context) {
-    final title = widget.role == Role.parent ? 'Dashboard - Orang Tua' : widget.role == Role.student ? 'Dashboard - Siswa' : 'Dashboard - Guru';
+    final isParent = widget.role == Role.parent;
+    final isStudent = widget.role == Role.student;
+    final isTeacher = widget.role == Role.teacher;
+
+    final pages = <Widget>[
+      Dashboard(role: widget.role),
+      if (isParent) PaymentsPageCompact(role: widget.role) else if (isStudent) PracticePage(role: widget.role) else AttendanceForTeacherPage(role: widget.role),
+      MessagesCompact(role: widget.role),
+      MorePage(role: widget.role),
+    ];
+
+    final destinations = <NavigationDestination>[
+      const NavigationDestination(icon: Icon(Icons.home_outlined), label: 'Home'),
+      NavigationDestination(icon: Icon(isParent ? Icons.payment_outlined : isStudent ? Icons.edit : Icons.check_box), label: isParent ? 'Payments' : isStudent ? 'Practice' : 'Absensi'),
+      const NavigationDestination(icon: Icon(Icons.message_outlined), label: 'Chat'),
+      const NavigationDestination(icon: Icon(Icons.grid_view_outlined), label: 'More'),
+    ];
+
     return Scaffold(
       appBar: AppBar(
-        title: Text(title),
+        title: Text(widget.role == Role.parent ? 'Dashboard - Orang Tua' : widget.role == Role.student ? 'Dashboard - Siswa' : 'Dashboard - Guru'),
         actions: [
           IconButton(icon: const Icon(Icons.notifications_none), onPressed: () => Navigator.push(context, MaterialPageRoute(builder: (_) => NotificationsPage()))),
           IconButton(icon: const Icon(Icons.person), onPressed: () => Navigator.push(context, MaterialPageRoute(builder: (_) => ProfilePage()))),
         ],
       ),
-      drawer: _AppDrawer(role: widget.role),
-      body: IndexedStack(index: _index, children: [
-        Dashboard(role: widget.role),
-        PaymentsPageCompact(role: widget.role),
-        MessagesCompact(role: widget.role),
-        MorePage(role: widget.role),
-      ]),
-      bottomNavigationBar: NavigationBar(selectedIndex: _index, onDestinationSelected: (i) => setState(() => _index = i), destinations: const [
-        NavigationDestination(icon: Icon(Icons.home_outlined), label: 'Home'),
-        NavigationDestination(icon: Icon(Icons.payment_outlined), label: 'Payments'),
-        NavigationDestination(icon: Icon(Icons.message_outlined), label: 'Chat'),
-        NavigationDestination(icon: Icon(Icons.grid_view_outlined), label: 'More'),
-      ]),
-      floatingActionButton: _index == 1 ? FloatingActionButton.extended(icon: const Icon(Icons.add), label: const Text('Bayar'), onPressed: () {}) : null,
+      drawer: AppDrawer(role: widget.role),
+      body: IndexedStack(index: _index, children: pages),
+      bottomNavigationBar: NavigationBar(selectedIndex: _index, onDestinationSelected: (i) => setState(() => _index = i), destinations: destinations),
+      floatingActionButton: _buildFAB(widget.role, _index),
     );
+  }
+
+  Widget? _buildFAB(Role role, int index) {
+    if (role == Role.parent && index == 1) {
+      return FloatingActionButton.extended(icon: const Icon(Icons.add), label: const Text('Bayar'), onPressed: () {});
+    } else if (role == Role.teacher && index == 1) {
+      return FloatingActionButton.extended(icon: const Icon(Icons.announcement), label: const Text('Tambah Pengumuman'), onPressed: () {
+        showDialog(context: context, builder: (_) {
+          final ctrl = TextEditingController();
+          return AlertDialog(
+            title: const Text('Tambah Pengumuman'),
+            content: TextField(controller: ctrl, decoration: const InputDecoration(hintText: 'Isi pengumuman')),
+            actions: [
+              TextButton(onPressed: () => Navigator.pop(context), child: const Text('Batal')),
+              ElevatedButton(onPressed: () {
+                Navigator.pop(context);
+                ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Pengumuman ditambahkan (dummy)')));
+              }, child: const Text('Simpan'))
+            ],
+          );
+        });
+      });
+    }
+    return null;
   }
 }
 
-class _AppDrawer extends StatelessWidget {
+// -------------------- Drawer --------------------
+class AppDrawer extends StatelessWidget {
   final Role role;
-  const _AppDrawer({required this.role});
+  const AppDrawer({required this.role});
+
   @override
   Widget build(BuildContext context) {
     return Drawer(
       child: SafeArea(
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.stretch,
-          children: [
-            DrawerHeader(
-              decoration: BoxDecoration(color: Theme.of(context).colorScheme.primary),
-              child: Row(children: [
-                CircleAvatar(radius: 36, backgroundColor: Colors.white, child: Icon(Icons.school, color: Theme.of(context).colorScheme.primary)),
-                const SizedBox(width: 12),
-                Column(crossAxisAlignment: CrossAxisAlignment.start, mainAxisAlignment: MainAxisAlignment.center, children: const [
-                  Text('SDN Contoh', style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold)),
-                  SizedBox(height: 4),
-                  Text('admin@sekolah.id', style: TextStyle(color: Colors.white70)),
-                ])
-              ]),
-            ),
+        child: Column(crossAxisAlignment: CrossAxisAlignment.stretch, children: [
+          DrawerHeader(
+            decoration: BoxDecoration(color: Theme.of(context).colorScheme.primary),
+            child: Row(children: [
+              CircleAvatar(radius: 36, backgroundColor: Colors.white, child: Icon(Icons.school, color: Theme.of(context).colorScheme.primary)),
+              const SizedBox(width: 12),
+              Column(crossAxisAlignment: CrossAxisAlignment.start, mainAxisAlignment: MainAxisAlignment.center, children: const [
+                Text('SMA Contoh', style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold)),
+                SizedBox(height: 4),
+                Text('admin@sma.example', style: TextStyle(color: Colors.white70)),
+              ])
+            ]),
+          ),
+          if (role == Role.parent) ...[
             ListTile(leading: const Icon(Icons.announcement), title: const Text('Pengumuman'), onTap: () => Navigator.push(context, MaterialPageRoute(builder: (_) => AnnouncementsPage()))),
             ListTile(leading: const Icon(Icons.school), title: const Text('Rapor'), onTap: () => Navigator.push(context, MaterialPageRoute(builder: (_) => ReportCardPage()))),
-            ListTile(leading: const Icon(Icons.schedule), title: const Text('Jadwal Pelajaran'), onTap: () => Navigator.push(context, MaterialPageRoute(builder: (_) => SchedulePage()))),
-            ListTile(leading: const Icon(Icons.groups), title: const Text('Ekstrakurikuler'), onTap: () => Navigator.push(context, MaterialPageRoute(builder: (_) => ExtracurricularPage()))),
-            ListTile(leading: const Icon(Icons.check_box_outlined), title: const Text('Rekap Presensi'), onTap: () => Navigator.push(context, MaterialPageRoute(builder: (_) => AttendancePage()))),
-            const Spacer(),
-            ListTile(leading: const Icon(Icons.logout), title: const Text('Logout'), onTap: () {}),
           ],
-        ),
-      ),
-    );
-  }
-}
-
-// -------------------- Dashboard and other pages are unchanged (kept concise) --------------------
-class Dashboard extends StatelessWidget {
-  final Role role;
-  const Dashboard({required this.role});
-
-  @override
-  Widget build(BuildContext context) {
-    return RefreshIndicator(
-      onRefresh: () async {},
-      child: ListView(padding: const EdgeInsets.all(16), children: [
-        _WelcomeCard(role: role),
-        const SizedBox(height: 12),
-        _SummaryRow(),
-        const SizedBox(height: 12),
-        _Section(title: 'Tagihan Terbaru', child: _PaymentsList()),
-        const SizedBox(height: 12),
-        _Section(title: 'Pengumuman Sekolah', child: _AnnouncementsPreview()),
-        const SizedBox(height: 12),
-        _Section(title: 'Jadwal Hari Ini', child: _SchedulePreview()),
-      ]),
-    );
-  }
-}
-
-class _WelcomeCard extends StatelessWidget {
-  final Role role;
-  const _WelcomeCard({required this.role});
-  @override
-  Widget build(BuildContext context) {
-    final name = role == Role.parent ? 'Orang Tua (Budi)' : role == Role.student ? 'Siswa (Budi)' : 'Guru (Ibu Siti)';
-    return Card(
-      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
-      child: Padding(
-        padding: const EdgeInsets.all(16.0),
-        child: Row(children: [
-          CircleAvatar(radius: 30, backgroundColor: Theme.of(context).colorScheme.primaryContainer, child: Icon(Icons.person, size: 30, color: Theme.of(context).colorScheme.onPrimaryContainer)),
-          const SizedBox(width: 12),
-          Expanded(child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [Text(name, style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 16)), const SizedBox(height: 6), const Text('Selamat datang di EspePay — kelola pembayaran & aktivitas sekolah di sini.')])),
+          if (role == Role.student) ...[
+            ListTile(leading: const Icon(Icons.edit), title: const Text('Practice'), onTap: () {}),
+            ListTile(leading: const Icon(Icons.menu_book), title: const Text('Pembelajaran'), onTap: () => Navigator.push(context, MaterialPageRoute(builder: (_) => LearningResourcesPage()))),
+          ],
+          if (role == Role.teacher) ...[
+            ListTile(leading: const Icon(Icons.announcement), title: const Text('Pengumuman'), onTap: () => Navigator.push(context, MaterialPageRoute(builder: (_) => AnnouncementsPage()))),
+            ListTile(leading: const Icon(Icons.check_box), title: const Text('Absensi Siswa'), onTap: () => Navigator.push(context, MaterialPageRoute(builder: (_) => AttendancePage()))),
+          ],
+          const Spacer(),
+          ListTile(leading: const Icon(Icons.logout), title: const Text('Logout'), onTap: () {
+            Navigator.pushAndRemoveUntil(context, MaterialPageRoute(builder: (_) => LoginPage()), (route) => false);
+          }),
         ]),
       ),
     );
   }
 }
 
-class _SummaryRow extends StatelessWidget {
+// -------------------- Dashboard --------------------
+class Dashboard extends StatelessWidget {
+  final Role role;
+  const Dashboard({required this.role});
+
   @override
   Widget build(BuildContext context) {
-    return Row(children: const [
-      Expanded(child: _TinyCard(title: 'Total Tagihan', value: 'IDR 1.450.000')),
-      SizedBox(width: 10),
-      Expanded(child: _TinyCard(title: 'Terbayar', value: 'IDR 1.100.000')),
-      SizedBox(width: 10),
-      Expanded(child: _TinyCard(title: 'Telat', value: 'IDR 350.000')),
-    ]);
+    if (role == Role.parent) return ParentDashboard();
+    if (role == Role.student) return StudentDashboardSummary();
+    return TeacherDashboardSummary();
   }
 }
 
-class _TinyCard extends StatelessWidget {
-  final String title, value;
-  const _TinyCard({required this.title, required this.value});
+// -------------------- Parent Dashboard --------------------
+class ParentDashboard extends StatelessWidget {
+  final List<Map<String, String>> children = [
+    {'name': 'Alif', 'spp': 'Lunas', 'absen': 'Hadir', 'school': 'SMA 1 Jakarta', 'class': '10 IPA 1'},
+    {'name': 'Nadia', 'spp': 'Belum Bayar', 'absen': 'Sakit', 'school': 'SMA 2 Bandung', 'class': '11 IPS 2'},
+  ];
+
   @override
   Widget build(BuildContext context) {
-    return Card(
-      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-      elevation: 1,
-      child: Padding(padding: const EdgeInsets.all(12), child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [Text(title, style: TextStyle(color: Colors.grey[700], fontSize: 12)), const SizedBox(height: 8), Text(value, style: const TextStyle(fontWeight: FontWeight.bold))])),
+    return RefreshIndicator(
+      onRefresh: () async {},
+      child: ListView(padding: const EdgeInsets.all(16), children: [
+        Card(
+          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
+          child: Padding(
+            padding: const EdgeInsets.all(16.0),
+            child: Row(children: [
+              CircleAvatar(radius: 30, backgroundColor: Theme.of(context).colorScheme.primaryContainer, child: Icon(Icons.person, size: 30, color: Theme.of(context).colorScheme.onPrimaryContainer)),
+              const SizedBox(width: 12),
+              Expanded(child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [const Text('Orang Tua: Dedy K Wijaya', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 16)), const SizedBox(height: 6), const Text('SMA Contoh — akun orang tua')]))
+            ]),
+          ),
+        ),
+        const SizedBox(height: 12),
+        ...children.map((c) => Card(
+          child: Padding(
+            padding: const EdgeInsets.all(14.0),
+            child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
+              Row(mainAxisAlignment: MainAxisAlignment.spaceBetween, children: [
+                Column(crossAxisAlignment: CrossAxisAlignment.start, children: [Text(c['name']!, style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 16)), Text(c['school']!) ]),
+                Column(crossAxisAlignment: CrossAxisAlignment.end, children: [Text('Kelas ${c['class']!}', style: const TextStyle(fontWeight: FontWeight.w600)), const SizedBox(height: 6), Text('SPP: ${c['spp']!}', style: TextStyle(color: c['spp'] == 'Lunas' ? Colors.green : Colors.orange))]),
+              ]),
+              const SizedBox(height: 12),
+              Row(children: [const Icon(Icons.calendar_today, size: 18), const SizedBox(width: 8), Text('Absensi hari ini: ${c['absen']!}')]),
+              const SizedBox(height: 12),
+              Align(alignment: Alignment.centerRight, child: TextButton(onPressed: () {}, child: const Text('Detail'))),
+            ]),
+          ),
+        )).toList(),
+        const SizedBox(height: 16),
+        Card(child: ListTile(leading: const Icon(Icons.announcement), title: const Text('Pengumuman Sekolah'), subtitle: const Text('Libur nasional: 17 Agustus'))),
+      ]),
     );
   }
 }
 
-class _Section extends StatelessWidget {
-  final String title;
-  final Widget child;
-  const _Section({required this.title, required this.child});
+// -------------------- Student Dashboard --------------------
+class StudentDashboardSummary extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
-    return Column(crossAxisAlignment: CrossAxisAlignment.start, children: [Text(title, style: const TextStyle(fontWeight: FontWeight.bold)), const SizedBox(height: 8), Card(child: Padding(padding: const EdgeInsets.all(12), child: child))]);
+    return ListView(padding: const EdgeInsets.all(16), children: [
+      Card(
+        child: Padding(padding: const EdgeInsets.all(12), child: Row(children: [
+          CircleAvatar(radius: 34, backgroundColor: Theme.of(context).colorScheme.primaryContainer, child: Icon(Icons.person, size: 34, color: Theme.of(context).colorScheme.onPrimaryContainer)),
+          const SizedBox(width: 12),
+          Expanded(child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: const [Text('Nama: Alif', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 16)), SizedBox(height: 4), Text('SMA 1 Jakarta • Kelas 10 IPA 1')])),
+          IconButton(icon: const Icon(Icons.arrow_forward_ios), onPressed: () {})
+        ])),
+      ),
+      const SizedBox(height: 12),
+      Card(child: ListTile(leading: const Icon(Icons.calculate), title: const Text('Practice Matematika (SMA)'), onTap: () => Navigator.push(context, MaterialPageRoute(builder: (_) => PracticePage(role: Role.student))))),
+      const SizedBox(height: 8),
+      Card(child: ListTile(leading: const Icon(Icons.menu_book), title: const Text('Pembelajaran'), onTap: () => Navigator.push(context, MaterialPageRoute(builder: (_) => LearningResourcesPage())))),
+    ]);
   }
 }
 
-class _PaymentsList extends StatelessWidget {
+// -------------------- Teacher Dashboard --------------------
+class TeacherDashboardSummary extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
-    final sample = List.generate(4, (i) => {'title': 'SPP Bulan ${i + 1}', 'amount': 'IDR 350.000', 'status': i % 3 == 0 ? 'Lunas' : i % 3 == 1 ? 'Belum Bayar' : 'Telat'});
-    return Column(children: sample.map((p) => ListTile(leading: const Icon(Icons.receipt_long), title: Text(p['title']!), subtitle: Text(p['amount']! + ' • ' + p['status']!), trailing: p['status'] == 'Lunas' ? const Icon(Icons.check_circle, color: Colors.green) : p['status'] == 'Telat' ? const Icon(Icons.error, color: Colors.red) : const Icon(Icons.hourglass_empty, color: Colors.orange), onTap: () {})).toList());
+    return ListView(padding: const EdgeInsets.all(16), children: [
+      Card(child: ListTile(leading: const Icon(Icons.person), title: const Text('Guru: Ibu Siti'), subtitle: const Text('SMA Contoh • Wali Kelas 10 IPA 1'))),
+      const SizedBox(height: 12),
+      Card(child: ListTile(leading: const Icon(Icons.check_box), title: const Text('Absensi Siswa'), subtitle: const Text('Input & edit absensi harian'), onTap: () => Navigator.push(context, MaterialPageRoute(builder: (_) => AttendancePage())))),
+      const SizedBox(height: 8),
+      Card(child: ListTile(leading: const Icon(Icons.announcement), title: const Text('Pengumuman'), subtitle: const Text('Buat pengumuman ke wali murid'), onTap: () => Navigator.push(context, MaterialPageRoute(builder: (_) => AnnouncementsPage())))),
+    ]);
   }
 }
 
-class _AnnouncementsPreview extends StatelessWidget {
-  @override
-  Widget build(BuildContext context) {
-    return Column(children: [ListTile(leading: const Icon(Icons.campaign), title: const Text('Libur Nasional: Hari Kemerdekaan'), subtitle: const Text('Tanggal 17 Agustus libur semua sekolah')), ListTile(leading: const Icon(Icons.info_outline), title: const Text('Pembagian Rapor'), subtitle: const Text('Rapor dibagikan pada minggu depan'))]);
-  }
-}
-
-class _SchedulePreview extends StatelessWidget {
-  @override
-  Widget build(BuildContext context) {
-    return Column(children: [ListTile(leading: const Icon(Icons.schedule), title: const Text('08:00 - 09:30'), subtitle: const Text('Matematika')), ListTile(leading: const Icon(Icons.schedule), title: const Text('09:45 - 11:15'), subtitle: const Text('Bahasa Indonesia'))]);
-  }
-}
-
+// -------------------- Payments Page --------------------
 class PaymentsPageCompact extends StatelessWidget {
   final Role role;
   const PaymentsPageCompact({required this.role});
   @override
   Widget build(BuildContext context) {
+    final sample = List.generate(4, (i) => {'title': 'SPP Bulan ${i + 1}', 'amount': 'Rp ${350000 + i * 25000}', 'status': i % 3 == 0 ? 'Lunas' : i % 3 == 1 ? 'Belum Bayar' : 'Telat'});
     return ListView(padding: const EdgeInsets.all(12), children: [
       const SizedBox(height: 6),
-      Card(child: Padding(padding: const EdgeInsets.all(12), child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [Text('Bayar SPP', style: TextStyle(fontWeight: FontWeight.bold)), const SizedBox(height: 8), Text('Pilih metode pembayaran: QR, Transfer, atau Kartu')]))),
+      Card(child: Padding(padding: const EdgeInsets.all(12), child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [Text('Bayar SPP', style: TextStyle(fontWeight: FontWeight.bold)), const SizedBox(height: 8), Text('Pilih metode pembayaran: QR / Transfer / Kartu')]))),
       const SizedBox(height: 12),
-      ...List.generate(6, (i) => Card(margin: const EdgeInsets.only(bottom: 10), child: ListTile(leading: CircleAvatar(child: Text('S${i+1}')), title: Text('SPP Bulan ${i+1}'), subtitle: Text('IDR ${300000 + i*25000}'), trailing: Text(i%3==0 ? 'Lunas' : i%3==1 ? 'Belum' : 'Telat'))))
+      ...sample.map((p) => Card(margin: const EdgeInsets.only(bottom: 10), child: ListTile(leading: const Icon(Icons.receipt_long), title: Text(p['title']!), subtitle: Text('${p['amount']} • ${p['status']}'), trailing: p['status'] == 'Lunas' ? const Icon(Icons.check_circle, color: Colors.green) : p['status'] == 'Telat' ? const Icon(Icons.error, color: Colors.red) : const Icon(Icons.hourglass_empty, color: Colors.orange)))).toList(),
     ]);
   }
 }
 
+// -------------------- Practice Page --------------------
+class PracticePage extends StatefulWidget {
+  final Role role;
+  const PracticePage({required this.role});
+  @override
+  State<PracticePage> createState() => _PracticePageState();
+}
+
+class _PracticePageState extends State<PracticePage> {
+  int score = 0;
+  final Random _rand = Random();
+  String question = '';
+  int answer = 0;
+  String message = '';
+
+  void newQuestion() {
+    final type = _rand.nextInt(3);
+    if (type == 0) {
+      final a = _rand.nextInt(50) + 1;
+      final b = _rand.nextInt(50) + 1;
+      question = '$a + $b = ?';
+      answer = a + b;
+    } else if (type == 1) {
+      final a = _rand.nextInt(12) + 2;
+      final b = _rand.nextInt(12) + 2;
+      question = '$a × $b = ?';
+      answer = a * b;
+    } else {
+      final x = _rand.nextInt(10) + 1;
+      final b = _rand.nextInt(10);
+      final c = 2 * x + b;
+      question = '2x + $b = $c. Berapa x?';
+      answer = x;
+    }
+    message = '';
+  }
+
+  void checkAnswer(int ans) {
+    setState(() {
+      if (ans == answer) {
+        score += 1;
+        message = 'Benar!';
+      } else {
+        message = 'Salah. Jawaban benar: $answer';
+      }
+    });
+    newQuestion();
+  }
+
+  @override
+  void initState() {
+    super.initState();
+    newQuestion();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      appBar: AppBar(title: const Text('Practice (SMA)')),
+      body: Padding(
+        padding: const EdgeInsets.all(16),
+        child: Column(children: [
+          Card(child: Padding(padding: const EdgeInsets.all(12), child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [Text('Soal', style: Theme.of(context).textTheme.titleMedium), const SizedBox(height: 8), Text(question, style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold)), const SizedBox(height: 12), Text(message, style: const TextStyle(color: Colors.green))]))),
+          const SizedBox(height: 12),
+          Wrap(spacing: 8, runSpacing: 8, children: List.generate(40, (i) => ElevatedButton(onPressed: () => checkAnswer(i), child: Text('$i')))),
+          const SizedBox(height: 12),
+          Text('Score: $score', style: const TextStyle(fontWeight: FontWeight.bold)),
+        ]),
+      ),
+    );
+  }
+}
+
+class PracticePageShortcut extends StatelessWidget {
+  final Role role;
+  const PracticePageShortcut({required this.role});
+  @override
+  Widget build(BuildContext context) => PracticePage(role: role);
+}
+
+// -------------------- Attendance For Teacher --------------------
+class AttendanceForTeacherPage extends StatefulWidget {
+  final Role role;
+  const AttendanceForTeacherPage({required this.role});
+  @override
+  State<AttendanceForTeacherPage> createState() => _AttendanceForTeacherPageState();
+}
+
+class _AttendanceForTeacherPageState extends State<AttendanceForTeacherPage> {
+  final List<Map<String, String>> students = [
+    {'name': 'Alif', 'status': 'Hadir'},
+    {'name': 'Nadia', 'status': 'Sakit'},
+    {'name': 'Rafi', 'status': 'Pulang'},
+  ];
+
+  @override
+  Widget build(BuildContext context) {
+    return ListView(padding: const EdgeInsets.all(12), children: [
+      const SizedBox(height: 8),
+      const Text('Input Absensi', style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
+      const SizedBox(height: 8),
+      ...students.asMap().entries.map((e) {
+        final idx = e.key;
+        final s = e.value;
+        return Card(child: ListTile(
+          title: Text(s['name']!),
+          trailing: DropdownButton<String>(value: s['status'], items: ['Hadir', 'Sakit', 'Pulang'].map((v) => DropdownMenuItem(value: v, child: Text(v))).toList(),
+            onChanged: (val) {
+              if (val == null) return;
+              setState(() => students[idx]['status'] = val);
+            },
+          ),
+        ));
+      }).toList(),
+    ]);
+  }
+}
+
+// -------------------- MessagesCompact --------------------
 class MessagesCompact extends StatelessWidget {
   final Role role;
   const MessagesCompact({required this.role});
@@ -553,11 +657,12 @@ class MessagesCompact extends StatelessWidget {
     return ListView(padding: const EdgeInsets.all(12), children: [
       TextField(decoration: InputDecoration(prefixIcon: const Icon(Icons.search), hintText: 'Cari pesan/ortu...', border: OutlineInputBorder(borderRadius: BorderRadius.circular(10)))),
       const SizedBox(height: 10),
-      ...List.generate(8, (i) => ListTile(leading: CircleAvatar(child: Text('P${i+1}')), title: Text('Orang Tua ${i+1}'), subtitle: Text('Pertanyaan mengenai pembayaran'), trailing: const Text('1h')))
+      ...List.generate(8, (i) => ListTile(leading: CircleAvatar(child: Text('P${i+1}')), title: Text('Orang Tua ${i+1}'), subtitle: Text('Pertanyaan mengenai pembayaran'), trailing: const Text('1h'))),
     ]);
   }
 }
 
+// -------------------- More Page --------------------
 class MorePage extends StatelessWidget {
   final Role role;
   const MorePage({required this.role});
@@ -574,47 +679,35 @@ class MorePage extends StatelessWidget {
   }
 }
 
+// -------------------- Other Pages --------------------
 class AnnouncementsPage extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
-    final notes = [
-      'Libur Nasional: 17 Agustus',
-      'Pembagian rapor: Jumat, 28 Nov',
-      'Donasi pembangunan: hubungi bendahara',
-    ];
-    return Scaffold(
-      appBar: AppBar(title: const Text('Pengumuman')),
-      body: ListView.separated(padding: const EdgeInsets.all(12), itemCount: notes.length, separatorBuilder: (_,__)=>const Divider(), itemBuilder: (c,i)=>ListTile(leading: const Icon(Icons.announcement), title: Text(notes[i]))),
-    );
+    final notes = ['Libur Nasional: 17 Agustus', 'Pembagian rapor: Jumat, 28 Nov', 'Donasi pembangunan: hubungi bendahara'];
+    return Scaffold(appBar: AppBar(title: const Text('Pengumuman')), body: ListView.separated(padding: const EdgeInsets.all(12), itemCount: notes.length, separatorBuilder: (_,__)=>const Divider(), itemBuilder: (c,i)=>ListTile(leading: const Icon(Icons.announcement), title: Text(notes[i]))));
   }
 }
 
 class LearningResourcesPage extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
-    final items = ['Materi Matematika', 'Video Bahasa Indonesia', 'Latihan IPA'];
-    return Scaffold(
-      appBar: AppBar(title: const Text('Materi Pembelajaran')),
-      body: ListView.builder(padding: const EdgeInsets.all(12), itemCount: items.length, itemBuilder: (c,i)=>Card(child: ListTile(leading: const Icon(Icons.menu_book), title: Text(items[i]), trailing: const Icon(Icons.open_in_new))))
-    );
+    final items = ['Materi Matematika SMA', 'Video Fisika', 'Latihan Kimia'];
+    return Scaffold(appBar: AppBar(title: const Text('Materi Pembelajaran')), body: ListView.builder(padding: const EdgeInsets.all(12), itemCount: items.length, itemBuilder: (c,i)=>Card(child: ListTile(leading: const Icon(Icons.menu_book), title: Text(items[i]), trailing: const Icon(Icons.open_in_new)))) );
   }
 }
 
 class ReportCardPage extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
-    final subjects = {'Matematika': 'A', 'Bahasa Indonesia': 'B+', 'IPA': 'A-'};
-    return Scaffold(
-      appBar: AppBar(title: const Text('Rapor')),
-      body: ListView(padding: const EdgeInsets.all(12), children: [Card(child: Padding(padding: const EdgeInsets.all(12), child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [Text('Rapor Semester 1', style: const TextStyle(fontWeight: FontWeight.bold)), const SizedBox(height: 12), ...subjects.entries.map((e)=>ListTile(title: Text(e.key), trailing: Text(e.value))).toList()])))]),
-    );
+    final subjects = {'Matematika': 'A-', 'Fisika': 'B+', 'Bahasa Inggris': 'A'};
+    return Scaffold(appBar: AppBar(title: const Text('Rapor')), body: ListView(padding: const EdgeInsets.all(12), children: [Card(child: Padding(padding: const EdgeInsets.all(12), child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [Text('Rapor Semester', style: const TextStyle(fontWeight: FontWeight.bold)), const SizedBox(height: 12), ...subjects.entries.map((e)=>ListTile(title: Text(e.key), trailing: Text(e.value))).toList()])))]));
   }
 }
 
 class SchedulePage extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
-    final schedule = ['08:00 Matematika', '09:30 Bahasa', '11:00 IPA'];
+    final schedule = ['07:00 - 08:30 Matematika', '08:45 - 10:15 Fisika', '10:30 - 12:00 Bahasa Inggris'];
     return Scaffold(appBar: AppBar(title: const Text('Jadwal Pelajaran')), body: ListView(padding: const EdgeInsets.all(12), children: schedule.map((s)=>Card(child: ListTile(title: Text(s)))).toList()));
   }
 }
@@ -622,7 +715,7 @@ class SchedulePage extends StatelessWidget {
 class ExtracurricularPage extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
-    final activities = ['Basket', 'Pramuka', 'Seni Tari'];
+    final activities = ['Basket', 'Pramuka', 'KIR'];
     return Scaffold(appBar: AppBar(title: const Text('Ekstrakurikuler')), body: ListView(padding: const EdgeInsets.all(12), children: activities.map((a)=>Card(child: ListTile(title: Text(a), trailing: const Icon(Icons.arrow_forward_ios, size: 16), onTap: (){}))).toList()));
   }
 }
@@ -643,12 +736,32 @@ class NotificationsPage extends StatelessWidget {
   }
 }
 
-class ProfilePage extends StatelessWidget {
+class ProfilePage extends StatefulWidget {
+  @override
+  State<ProfilePage> createState() => _ProfilePageState();
+}
+class _ProfilePageState extends State<ProfilePage> {
   @override
   Widget build(BuildContext context) {
-    return Scaffold(appBar: AppBar(title: const Text('Profil')), body: ListView(padding: const EdgeInsets.all(12), children: [Card(child: ListTile(leading: const Icon(Icons.person), title: const Text('Dedy K Wijaya'), subtitle: const Text('dkwijaya.gin@gmail.com'))), Card(child: ListTile(leading: const Icon(Icons.settings), title: const Text('Pengaturan Akun')))]));
+    final brightness = Theme.of(context).brightness;
+    return Scaffold(
+      appBar: AppBar(title: const Text('Profil')),
+      body: ListView(padding: const EdgeInsets.all(12), children: [
+        Card(child: ListTile(leading: const Icon(Icons.person), title: const Text('Dedy K Wijaya'), subtitle: const Text('dkwijaya.gin@gmail.com'))),
+        Card(child: ListTile(leading: const Icon(Icons.settings), title: const Text('Pengaturan Akun'))),
+        Card(child: ListTile(
+          leading: Icon(brightness == Brightness.light ? Icons.dark_mode : Icons.light_mode),
+          title: Text(brightness == Brightness.light ? 'Ke Dark Mode' : 'Ke Light Mode'),
+          onTap: () {
+            if (_themeModeNotifier.value == ThemeMode.light) _themeModeNotifier.value = ThemeMode.dark;
+            else if (_themeModeNotifier.value == ThemeMode.dark) _themeModeNotifier.value = ThemeMode.light;
+            else _themeModeNotifier.value = brightness == Brightness.dark ? ThemeMode.light : ThemeMode.dark;
+            setState(() {});
+          },
+        )),
+        Card(child: ListTile(leading: const Icon(Icons.logout), title: const Text('Logout'), onTap: () => Navigator.pushAndRemoveUntil(context, MaterialPageRoute(builder: (_) => LoginPage()), (route) => false))),
+      ]),
+    );
   }
 }
-
-// End of mockup
 
