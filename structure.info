@@ -1,0 +1,32 @@
+lib/
+├── main.dart
+├── role.dart
+├── theme/
+│   └── app_theme.dart
+├── screens/
+│   ├── splash/
+│   │   ├── splash_first.dart
+│   │   └── splash_second.dart
+│   ├── login/
+│   │   └── login_page.dart
+│   ├── role/
+│   │   └── role_select_screen.dart
+│   ├── home/
+│   │   ├── home_screen.dart
+│   │   ├── dashboard.dart
+│   │   ├── payments_page.dart
+│   │   ├── practice_page.dart
+│   │   ├── attendance_teacher.dart
+│   │   ├── messages_compact.dart
+│   │   └── drawer.dart
+│   └── more/
+│       ├── more_page.dart
+│       ├── announcements_page.dart
+│       ├── learning_resources_page.dart
+│       ├── report_card_page.dart
+│       ├── schedule_page.dart
+│       ├── extracurricular_page.dart
+│       ├── attendance_page.dart
+│       ├── profile_page.dart
+│       └── notifications_page.dart
+
