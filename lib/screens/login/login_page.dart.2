@@ -1,0 +1,166 @@
+import 'package:flutter/material.dart';
+import 'package:font_awesome_flutter/font_awesome_flutter.dart';
+import 'package:xolana/role.dart';
+import 'package:xolana/screens/home/home_screen.dart';
+
+class LoginPage extends StatefulWidget {
+  const LoginPage({super.key});
+
+  @override
+  State<LoginPage> createState() => _LoginPageState();
+}
+
+class _LoginPageState extends State<LoginPage> {
+  final TextEditingController _emailController = TextEditingController();
+  final TextEditingController _passwordController = TextEditingController();
+
+  // contoh: default false, nanti bisa diganti logika backend
+  bool isParentLoginEnabled = false;
+
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      backgroundColor: Colors.white,
+      body: Center(
+        child: SingleChildScrollView(
+          padding: const EdgeInsets.all(24),
+          child: Column(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              // Logo Xolana
+              Padding(
+                padding: const EdgeInsets.only(bottom: 32),
+                child: Image.asset(
+                  "assets/images/xolana_logo.png",
+                  height: 80,
+                ),
+              ),
+
+              // Input Email
+              TextField(
+                controller: _emailController,
+                decoration: InputDecoration(
+                  prefixIcon: const Icon(Icons.person),
+                  labelText: "Email / Username",
+                  border: OutlineInputBorder(
+                    borderRadius: BorderRadius.circular(12),
+                  ),
+                ),
+              ),
+              const SizedBox(height: 16),
+
+              // Input Password
+              TextField(
+                controller: _passwordController,
+                obscureText: true,
+                decoration: InputDecoration(
+                  prefixIcon: const Icon(Icons.lock),
+                  labelText: "Password",
+                  border: OutlineInputBorder(
+                    borderRadius: BorderRadius.circular(12),
+                  ),
+                ),
+              ),
+              const SizedBox(height: 24),
+
+              // Tombol Masuk Orang Tua
+              ElevatedButton(
+                onPressed: isParentLoginEnabled
+                    ? () {
+                        Navigator.pushReplacement(
+                          context,
+                          MaterialPageRoute(
+                            builder: (_) => const HomeScreen(role: Role.parent),
+                          ),
+                        );
+                      }
+                    : null, // tetap disable
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: Colors.deepPurple,
+                  foregroundColor: Colors.white,
+                  disabledBackgroundColor: Colors.deepPurple.shade200,
+                  disabledForegroundColor: Colors.white70,
+                  minimumSize: const Size(double.infinity, 48),
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(24),
+                  ),
+                ),
+                child: const Text(
+                  "Masuk (Orang Tua)",
+                  style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
+                ),
+              ),
+              const SizedBox(height: 12),
+
+              // Tombol Masuk sebagai Siswa
+              OutlinedButton.icon(
+                onPressed: () {
+                  Navigator.pushReplacement(
+                    context,
+                    MaterialPageRoute(
+                      builder: (_) => const HomeScreen(role: Role.student),
+                    ),
+                  );
+                },
+                icon: const FaIcon(FontAwesomeIcons.graduationCap, size: 18),
+                label: const Text("Masuk sebagai Siswa"),
+                style: OutlinedButton.styleFrom(
+                  minimumSize: const Size(double.infinity, 48),
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(24),
+                  ),
+                ),
+              ),
+              const SizedBox(height: 12),
+
+              // Tombol Masuk sebagai Guru
+              OutlinedButton.icon(
+                onPressed: () {
+                  Navigator.pushReplacement(
+                    context,
+                    MaterialPageRoute(
+                      builder: (_) => const HomeScreen(role: Role.teacher),
+                    ),
+                  );
+                },
+                icon: const FaIcon(FontAwesomeIcons.userTie, size: 18),
+                label: const Text("Masuk sebagai Guru"),
+                style: OutlinedButton.styleFrom(
+                  minimumSize: const Size(double.infinity, 48),
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(24),
+                  ),
+                ),
+              ),
+              const SizedBox(height: 20),
+
+              // Skip login manual
+              TextButton(
+                onPressed: () {
+                  Navigator.pushReplacement(
+                    context,
+                    MaterialPageRoute(
+                      builder: (_) => const HomeScreen(role: Role.parent),
+                    ),
+                  );
+                },
+                child: const Text(
+                  "Lewati (pilih role manual)",
+                  style: TextStyle(fontSize: 14, color: Colors.deepPurple),
+                ),
+              ),
+              const SizedBox(height: 20),
+
+              // Info
+              const Text(
+                "Belum punya akun? Hubungi admin sekolah.",
+                style: TextStyle(color: Colors.grey),
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+}
+

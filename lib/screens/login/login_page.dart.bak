@@ -1,0 +1,243 @@
+import 'package:flutter/material.dart';
+import 'package:lottie/lottie.dart';
+import 'package:xolana/role.dart';
+import 'package:xolana/screens/home/home_screen.dart';
+import 'package:xolana/screens/role/role_select_screen.dart';
+
+class LoginPage extends StatefulWidget {
+  const LoginPage({super.key});
+
+  @override
+  State<LoginPage> createState() => _LoginPageState();
+}
+
+class _LoginPageState extends State<LoginPage> with TickerProviderStateMixin {
+  final TextEditingController _emailCtrl = TextEditingController();
+  final TextEditingController _passCtrl = TextEditingController();
+
+  late AnimationController _logoController;
+  late AnimationController _transitionController;
+  late Animation<Offset> _logoSlide;
+  late Animation<double> _formFade;
+
+  bool _showForm = false;
+
+  @override
+  void initState() {
+    super.initState();
+
+    // Controller untuk animasi splash logo
+    _logoController = AnimationController(vsync: this);
+
+    // Controller untuk transisi logo + form
+    _transitionController = AnimationController(
+      vsync: this,
+      duration: const Duration(milliseconds: 800),
+    );
+
+    // Logo geser ke atas
+    _logoSlide = Tween<Offset>(
+      begin: Offset.zero,
+      end: const Offset(0, -0.8),
+    ).animate(
+      CurvedAnimation(
+        parent: _transitionController,
+        curve: Curves.easeOut,
+      ),
+    );
+
+    // Form fade in
+    _formFade = CurvedAnimation(
+      parent: _transitionController,
+      curve: Curves.easeIn,
+    );
+  }
+
+  @override
+  void dispose() {
+    _emailCtrl.dispose();
+    _passCtrl.dispose();
+    _logoController.dispose();
+    _transitionController.dispose();
+    super.dispose();
+  }
+
+  void _onSplashFinished() {
+    // setelah splash selesai, jalankan transisi logo + form
+    setState(() {
+      _showForm = true;
+    });
+    _transitionController.forward();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      backgroundColor: Colors.white, // default light
+      body: Center(
+        child: Stack(
+          alignment: Alignment.center,
+          children: [
+            // Logo animasi + freeze frame terakhir
+            SlideTransition(
+              position: _logoSlide,
+              child: SizedBox(
+                height: 180,
+                child: Lottie.asset(
+                  'assets/animations/xolana_splash.json',
+                  controller: _logoController,
+                  onLoaded: (composition) {
+                    _logoController
+                      ..duration = composition.duration
+                      ..forward().whenComplete(() {
+                        // freeze di frame terakhir
+                        _logoController.animateTo(1.0, duration: Duration.zero);
+                        _onSplashFinished();
+                      });
+                  },
+                ),
+              ),
+            ),
+
+            // Form login fade in setelah logo naik
+            if (_showForm)
+              FadeTransition(
+                opacity: _formFade,
+                child: Padding(
+                  padding: const EdgeInsets.all(24),
+                  child: SingleChildScrollView(
+                    child: Column(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: [
+                        const SizedBox(height: 200), // biar form muncul di bawah logo
+
+                        TextField(
+                          controller: _emailCtrl,
+                          decoration: InputDecoration(
+                            prefixIcon: const Icon(Icons.person),
+                            hintText: 'Email / Username',
+                            border: OutlineInputBorder(
+                              borderRadius: BorderRadius.circular(12),
+                            ),
+                          ),
+                        ),
+                        const SizedBox(height: 16),
+
+                        TextField(
+                          controller: _passCtrl,
+                          obscureText: true,
+                          decoration: InputDecoration(
+                            prefixIcon: const Icon(Icons.lock),
+                            hintText: 'Password',
+                            border: OutlineInputBorder(
+                              borderRadius: BorderRadius.circular(12),
+                            ),
+                          ),
+                        ),
+                        const SizedBox(height: 20),
+
+                        // Tombol masuk sebagai orang tua
+                        SizedBox(
+                          width: double.infinity,
+                          child: ElevatedButton(
+                            onPressed: () {
+                              Navigator.pushReplacement(
+                                context,
+                                MaterialPageRoute(
+                                  builder: (_) => HomeScreen(role: Role.parent),
+                                ),
+                              );
+                            },
+                            style: ElevatedButton.styleFrom(
+                              padding: const EdgeInsets.symmetric(vertical: 14),
+                              shape: RoundedRectangleBorder(
+                                borderRadius: BorderRadius.circular(12),
+                              ),
+                              backgroundColor: Colors.deepPurple,
+                            ),
+                            child: const Text('Masuk (Orang Tua)'),
+                          ),
+                        ),
+                        const SizedBox(height: 12),
+
+                        // Tombol masuk sebagai siswa
+                        SizedBox(
+                          width: double.infinity,
+                          child: OutlinedButton.icon(
+                            onPressed: () {
+                              Navigator.pushReplacement(
+                                context,
+                                MaterialPageRoute(
+                                  builder: (_) => HomeScreen(role: Role.student),
+                                ),
+                              );
+                            },
+                            icon: const Icon(Icons.school),
+                            label: const Text('Masuk sebagai Siswa'),
+                            style: OutlinedButton.styleFrom(
+                              padding: const EdgeInsets.symmetric(vertical: 14),
+                              shape: RoundedRectangleBorder(
+                                borderRadius: BorderRadius.circular(12),
+                              ),
+                            ),
+                          ),
+                        ),
+                        const SizedBox(height: 12),
+
+                        // Tombol masuk sebagai guru
+                        SizedBox(
+                          width: double.infinity,
+                          child: OutlinedButton.icon(
+                            onPressed: () {
+                              Navigator.pushReplacement(
+                                context,
+                                MaterialPageRoute(
+                                  builder: (_) => HomeScreen(role: Role.teacher),
+                                ),
+                              );
+                            },
+                            icon: const Icon(Icons.person_search),
+                            label: const Text('Masuk sebagai Guru'),
+                            style: OutlinedButton.styleFrom(
+                              padding: const EdgeInsets.symmetric(vertical: 14),
+                              shape: RoundedRectangleBorder(
+                                borderRadius: BorderRadius.circular(12),
+                              ),
+                            ),
+                          ),
+                        ),
+                        const SizedBox(height: 16),
+
+                        // Link lewati
+                        TextButton(
+                          onPressed: () {
+                            Navigator.pushReplacement(
+                              context,
+                              MaterialPageRoute(
+                                builder: (_) => const RoleSelectScreen(),
+                              ),
+                            );
+                          },
+                          child: const Text('Lewati (pilih role manual)'),
+                        ),
+                        const SizedBox(height: 16),
+
+                        Text(
+                          'Belum punya akun? Hubungi admin sekolah.',
+                          style: Theme.of(context)
+                              .textTheme
+                              .bodySmall
+                              ?.copyWith(color: Colors.grey[600]),
+                        ),
+                      ],
+                    ),
+                  ),
+                ),
+              ),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
