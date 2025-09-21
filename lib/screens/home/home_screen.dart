@@ -1,9 +1,8 @@
 import 'package:flutter/material.dart';
-import '../../role.dart';
-import '../../theme/app_theme.dart';
-import 'dashboard_parent.dart';
-import 'dashboard_student.dart';
-import 'dashboard_teacher.dart';
+import 'package:xolana/role.dart';
+import 'package:xolana/screens/home/dashboard_parent.dart';
+import 'package:xolana/screens/home/dashboard_student.dart';
+import 'package:xolana/screens/home/dashboard_teacher.dart';
 
 class HomeScreen extends StatefulWidget {
   final Role role;
@@ -15,62 +14,26 @@ class HomeScreen extends StatefulWidget {
 }
 
 class _HomeScreenState extends State<HomeScreen> {
-  int _currentIndex = 0;
-
   @override
   Widget build(BuildContext context) {
-    final isParent = widget.role == Role.parent;
-    final isStudent = widget.role == Role.student;
-    final isTeacher = widget.role == Role.teacher;
+    switch (widget.role) {
+      case Role.parent:
+        // Parent Dashboard
+        return const ParentDashboard(parentName: "Wijaya");
 
-    final pages = [
-      if (isParent)
-        ParentDashboard(
-          role: widget.role,
-          parentName: "Wijaya",
-        ),
-      if (isStudent) StudentDashboard(role: widget.role),
-      if (isTeacher) TeacherDashboard(role: widget.role),
-    ];
+      case Role.student:
+        // Student Dashboard
+        return StudentDashboard(role: widget.role);
 
-    return Scaffold(
-      body: pages[_currentIndex],
-      bottomNavigationBar: BottomNavigationBar(
-        type: BottomNavigationBarType.fixed,
-        currentIndex: _currentIndex,
-        selectedItemColor: XolanaColors.xRed,
-        unselectedItemColor: Colors.grey,
-        onTap: (index) {
-          setState(() => _currentIndex = index);
-        },
-        items: const [
-          BottomNavigationBarItem(
-            icon: Icon(Icons.dashboard),
-            label: "Dashboard",
-          ),
-          BottomNavigationBarItem(
-            icon: Icon(Icons.payment),
-            label: "Payments",
-          ),
-          BottomNavigationBarItem(
-            icon: Icon(Icons.book),
-            label: "Practice",
-          ),
-          BottomNavigationBarItem(
-            icon: Icon(Icons.check_circle),
-            label: "Attendance",
-          ),
-          BottomNavigationBarItem(
-            icon: Icon(Icons.message),
-            label: "Messages",
-          ),
-          BottomNavigationBarItem(
-            icon: Icon(Icons.more_horiz),
-            label: "More",
-          ),
-        ],
-      ),
-    );
+      case Role.teacher:
+        // Teacher Dashboard
+        return TeacherDashboard(role: widget.role);
+
+      default:
+        return const Scaffold(
+          body: Center(child: Text("Role tidak dikenal")),
+        );
+    }
   }
 }
 
