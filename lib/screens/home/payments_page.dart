@@ -1,47 +1,70 @@
 import 'package:flutter/material.dart';
-import 'package:xolana/role.dart';
 
 class PaymentsPage extends StatelessWidget {
-  final Role role;
-  const PaymentsPage({super.key, required this.role});
+  final String studentName;
+  final String status; // 👈 tambahan
+
+  const PaymentsPage({
+    super.key,
+    required this.studentName,
+    required this.status,
+  });
 
   @override
   Widget build(BuildContext context) {
-    if (role != Role.parent) {
-      return const Scaffold(
-        body: Center(child: Text("Payments available for parents only.")),
-      );
-    }
+    // contoh data historis pembayaran
+    final List<Map<String, dynamic>> payments = [
+      {
+        'title': 'SPP Juli 2025',
+        'amount': 500000,
+        'status': 'LUNAS',
+      },
+      {
+        'title': 'SPP Agustus 2025',
+        'amount': 500000,
+        'status': status == 'PENDING' ? 'PENDING' : 'LUNAS',
+      },
+      {
+        'title': 'Iuran Ekstra Renang',
+        'amount': 200000,
+        'status': status == 'PENDING' ? 'BELUM BAYAR' : 'LUNAS',
+      },
+    ];
 
     return Scaffold(
-      appBar: AppBar(title: const Text("Payments")),
-      body: ListView(
+      appBar: AppBar(
+        title: Text('Pembayaran - $studentName'),
+      ),
+      body: ListView.separated(
         padding: const EdgeInsets.all(16),
-        children: [
-          Card(
+        itemCount: payments.length,
+        separatorBuilder: (_, __) => const SizedBox(height: 12),
+        itemBuilder: (context, index) {
+          final p = payments[index];
+          final color = p['status'] == 'LUNAS'
+              ? Colors.green
+              : (p['status'] == 'PENDING'
+                  ? Colors.orange
+                  : Colors.red);
+
+          return Card(
             child: ListTile(
-              leading: const Icon(Icons.school),
-              title: const Text("Tuition Fee - September"),
-              subtitle: const Text("Due: 30 Sept 2025"),
-              trailing: ElevatedButton(
-                onPressed: () {
-                  ScaffoldMessenger.of(context).showSnackBar(
-                    const SnackBar(content: Text("Redirecting to payment...")),
-                  );
-                },
-                child: const Text("Pay"),
+              leading: Icon(
+                Icons.receipt_long,
+                color: color,
+              ),
+              title: Text(p['title']),
+              subtitle: Text("Rp ${p['amount']}"),
+              trailing: Text(
+                p['status'],
+                style: TextStyle(
+                  fontWeight: FontWeight.bold,
+                  color: color,
+                ),
               ),
             ),
-          ),
-          Card(
-            child: ListTile(
-              leading: const Icon(Icons.book),
-              title: const Text("Books & Materials"),
-              subtitle: const Text("Paid"),
-              trailing: const Icon(Icons.check_circle, color: Colors.green),
-            ),
-          ),
-        ],
+          );
+        },
       ),
     );
   }

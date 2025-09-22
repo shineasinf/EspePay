@@ -1,7 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:lottie/lottie.dart';
 import 'package:xolana/theme/app_theme.dart';
-import 'package:xolana/screens/home/payments_page.dart';
 
 class ParentDashboard extends StatefulWidget {
   final String parentName;
@@ -14,18 +13,9 @@ class ParentDashboard extends StatefulWidget {
 class _ParentDashboardState extends State<ParentDashboard> {
   int _currentIndex = 0;
 
-  /// 🔥 Data anak + status pembayaran
   final List<Map<String, String>> children = [
-    {
-      'name': 'Bayu Perdana Putra',
-      'class': 'Kelas 3A',
-      'status': 'LUNAS',
-    },
-    {
-      'name': 'Inggrid Zyra Aeryn',
-      'class': 'Kelas 1A',
-      'status': 'PENDING',
-    },
+    {'name': 'Bayu Perdana Putra', 'class': 'Kelas 3A'},
+    {'name': 'Inggrid Zyra Aeryn', 'class': 'Kelas 1A'},
   ];
 
   final List<Map<String, String>> announcements = [
@@ -44,17 +34,6 @@ class _ParentDashboardState extends State<ParentDashboard> {
     {'date': '2 Mar', 'event': 'Rapat Orang Tua'},
   ];
 
-  Color _statusColor(String status) {
-    switch (status) {
-      case 'LUNAS':
-        return Colors.green;
-      case 'PENDING':
-        return Colors.orange;
-      default:
-        return Colors.red;
-    }
-  }
-
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -62,6 +41,7 @@ class _ParentDashboardState extends State<ParentDashboard> {
         backgroundColor: XolanaColors.xRed,
         title: Row(
           children: [
+            // pakai animasi Lottie untuk logo Xolana
             Lottie.asset(
               'assets/icons/xolana_icon.json',
               height: 36,
@@ -107,7 +87,7 @@ class _ParentDashboardState extends State<ParentDashboard> {
             child: CircleAvatar(
               backgroundColor: Colors.white,
               child: Text(
-                'W', // in real case -> inisial ortu
+                'W',
                 style: TextStyle(color: Colors.black),
               ),
             ),
@@ -224,24 +204,7 @@ class _ParentDashboardState extends State<ParentDashboard> {
           ListTile(
             leading: const Icon(Icons.payment, color: Colors.purple),
             title: const Text("Status Pembayaran"),
-            trailing: Text(
-              child['status'] ?? '',
-              style: TextStyle(
-                fontWeight: FontWeight.bold,
-                color: _statusColor(child['status'] ?? ''),
-              ),
-            ),
-            onTap: () {
-              Navigator.push(
-                context,
-                MaterialPageRoute(
-                  builder: (_) => PaymentsPage(
-                    studentName: child['name'] ?? '',
-                    status: child['status'] ?? 'BELUM DIBAYAR',
-                  ),
-                ),
-              );
-            },
+            onTap: () {},
           ),
         ],
       ),
