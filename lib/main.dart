@@ -13,8 +13,8 @@ class XolanaApp extends StatelessWidget {
     return MaterialApp(
       title: 'Xolana',
       debugShowCheckedModeBanner: false,
-      theme: ThemeData.light(), // default light
-      home: const LoginPage(),  // ⬅️ langsung login page
+      theme: ThemeData.light(),
+      home: const LoginPage(),
     );
   }
 }

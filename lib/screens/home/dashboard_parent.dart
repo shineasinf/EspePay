@@ -24,7 +24,7 @@ class _ParentDashboardState extends State<ParentDashboard> {
     {
       'name': 'Inggrid Zyra Aeryn',
       'class': 'Kelas 1A',
-      'status': 'PENDING',
+      'status': 'BELUM BAYAR',
     },
   ];
 
