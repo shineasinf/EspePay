@@ -2,7 +2,6 @@ import 'package:flutter/material.dart';
 import 'package:lottie/lottie.dart';
 import 'package:xolana/theme/app_theme.dart';
 import 'package:xolana/screens/home/payments_page.dart';
-import 'payments_summary_page.dart';
 
 class ParentDashboard extends StatefulWidget {
   final String parentName;
@@ -165,20 +164,11 @@ class _ParentDashboardState extends State<ParentDashboard> {
         selectedItemColor: XolanaColors.xRed,
         unselectedItemColor: Colors.grey,
         onTap: (index) {
-  setState(() {
-    _currentIndex = index;
-  });
-  if (index == 1) {
-    Navigator.push(
-      context,
-      MaterialPageRoute(
-        builder: (_) => const PaymentsSummaryPage(),
-      ),
-    );
-  }
-},
-
-	items: const [
+          setState(() {
+            _currentIndex = index;
+          });
+        },
+        items: const [
           BottomNavigationBarItem(
             icon: Icon(Icons.dashboard),
             label: 'Dashboard',
