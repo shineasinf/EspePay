@@ -1,5 +1,5 @@
 /// parent_dashboard.dart
-/// Versi lengkap dengan menu Profil, Setting & Logout
+/// versi lengkap terbaru — 8 Okt 2025
 import 'package:flutter/material.dart';
 import 'package:lottie/lottie.dart';
 import 'package:xolana/theme/app_theme.dart';
@@ -8,7 +8,6 @@ import 'package:xolana/screens/more/schedule_page.dart';
 import 'package:xolana/screens/more/attendance_page.dart';
 import 'package:xolana/screens/home/payments_page.dart';
 import 'payments_summary_page.dart';
-import 'package:xolana/screens/splash/splash_screen.dart'; // pastikan file splash ada
 
 class ParentDashboard extends StatefulWidget {
   final String parentName;
@@ -21,6 +20,7 @@ class ParentDashboard extends StatefulWidget {
 class _ParentDashboardState extends State<ParentDashboard> {
   int _currentIndex = 0;
 
+  /// 🔥 Data anak + status pembayaran
   final List<Map<String, String>> children = [
     {
       'name': 'Bayu Perdana Putra',
@@ -59,15 +59,6 @@ class _ParentDashboardState extends State<ParentDashboard> {
       default:
         return Colors.red;
     }
-  }
-
-  void _logout() {
-    // nanti bisa tambahkan proses clear session/token disini
-    Navigator.pushAndRemoveUntil(
-      context,
-      MaterialPageRoute(builder: (_) => const SplashScreen()),
-      (route) => false,
-    );
   }
 
   @override
@@ -117,44 +108,15 @@ class _ParentDashboardState extends State<ParentDashboard> {
               ),
             ],
           ),
-          PopupMenuButton<String>(
-            icon: const CircleAvatar(
+          const Padding(
+            padding: EdgeInsets.only(right: 12),
+            child: CircleAvatar(
               backgroundColor: Colors.white,
-              child: Text('W', style: TextStyle(color: Colors.black)),
+              child: Text(
+                'W', // in real case -> inisial ortu
+                style: TextStyle(color: Colors.black),
+              ),
             ),
-            onSelected: (value) {
-              if (value == 'profile') {
-                // TODO: arahkan ke halaman profil orang tua
-              } else if (value == 'settings') {
-                // TODO: arahkan ke halaman pengaturan
-              } else if (value == 'logout') {
-                _logout();
-              }
-            },
-            itemBuilder: (context) => [
-              const PopupMenuItem(
-                value: 'profile',
-                child: ListTile(
-                  leading: Icon(Icons.person),
-                  title: Text('Profil'),
-                ),
-              ),
-              const PopupMenuItem(
-                value: 'settings',
-                child: ListTile(
-                  leading: Icon(Icons.settings),
-                  title: Text('Pengaturan'),
-                ),
-              ),
-              const PopupMenuDivider(),
-              const PopupMenuItem(
-                value: 'logout',
-                child: ListTile(
-                  leading: Icon(Icons.logout, color: Colors.red),
-                  title: Text('Logout', style: TextStyle(color: Colors.red)),
-                ),
-              ),
-            ],
           ),
         ],
       ),
