@@ -1,11 +1,7 @@
-/// parent_dashboard.dart
-/// versi lengkap terbaru — 8 Okt 2025
+///3 oct 2025
 import 'package:flutter/material.dart';
 import 'package:lottie/lottie.dart';
 import 'package:xolana/theme/app_theme.dart';
-import 'package:xolana/screens/more/report_card_page.dart';
-import 'package:xolana/screens/more/schedule_page.dart';
-import 'package:xolana/screens/more/attendance_page.dart';
 import 'package:xolana/screens/home/payments_page.dart';
 import 'payments_summary_page.dart';
 
@@ -169,19 +165,21 @@ class _ParentDashboardState extends State<ParentDashboard> {
         currentIndex: _currentIndex,
         selectedItemColor: XolanaColors.xRed,
         unselectedItemColor: Colors.grey,
-        type: BottomNavigationBarType.fixed,
         onTap: (index) {
-          setState(() => _currentIndex = index);
-          if (index == 1) {
-            Navigator.push(
-              context,
-              MaterialPageRoute(
-                builder: (_) => const PaymentsSummaryPage(),
-              ),
-            );
-          }
-        },
-        items: const [
+  setState(() {
+    _currentIndex = index;
+  });
+  if (index == 1) {
+    Navigator.push(
+      context,
+      MaterialPageRoute(
+        builder: (_) => const PaymentsSummaryPage(),
+      ),
+    );
+  }
+},
+
+	items: const [
           BottomNavigationBarItem(
             icon: Icon(Icons.dashboard),
             label: 'Dashboard',
@@ -222,38 +220,17 @@ class _ParentDashboardState extends State<ParentDashboard> {
           ListTile(
             leading: const Icon(Icons.book, color: Colors.blue),
             title: const Text("Laporan Nilai"),
-            onTap: () {
-              Navigator.push(
-                context,
-                MaterialPageRoute(
-                  builder: (_) => ReportCardPage(studentName: child['name']!),
-                ),
-              );
-            },
+            onTap: () {},
           ),
           ListTile(
             leading: const Icon(Icons.calendar_today, color: Colors.green),
             title: const Text("Jadwal"),
-            onTap: () {
-              Navigator.push(
-                context,
-                MaterialPageRoute(
-                  builder: (_) => SchedulePage(studentName: child['name']!),
-                ),
-              );
-            },
+            onTap: () {},
           ),
           ListTile(
             leading: const Icon(Icons.check_circle, color: Colors.orange),
             title: const Text("Absensi"),
-            onTap: () {
-              Navigator.push(
-                context,
-                MaterialPageRoute(
-                  builder: (_) => AttendancePage(studentName: child['name']!),
-                ),
-              );
-            },
+            onTap: () {},
           ),
           ListTile(
             leading: const Icon(Icons.payment, color: Colors.purple),

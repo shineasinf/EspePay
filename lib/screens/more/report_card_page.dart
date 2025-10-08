@@ -1,41 +1,35 @@
 import 'package:flutter/material.dart';
 
 class ReportCardPage extends StatelessWidget {
-  const ReportCardPage({super.key});
+  final String studentName;
+
+  const ReportCardPage({super.key, required this.studentName}); // ← tambahkan parameter
 
   @override
   Widget build(BuildContext context) {
-    final subjects = {
-      'Matematika': 'A-',
-      'Fisika': 'B+',
-      'Bahasa Inggris': 'A'
-    };
+    final List<Map<String, dynamic>> grades = [
+      {'type': 'Ulangan Harian', 'subject': 'Matematika', 'score': 85},
+      {'type': 'PR', 'subject': 'Bahasa Indonesia', 'score': 90},
+      {'type': 'Tugas', 'subject': 'IPA', 'score': 88},
+    ];
 
     return Scaffold(
-      appBar: AppBar(title: const Text('Rapor')),
-      body: ListView(
-        padding: const EdgeInsets.all(12),
-        children: [
-          Card(
-            child: Padding(
-              padding: const EdgeInsets.all(12),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  const Text('Rapor Semester',
-                      style: TextStyle(fontWeight: FontWeight.bold)),
-                  const SizedBox(height: 12),
-                  ...subjects.entries
-                      .map((e) => ListTile(
-                            title: Text(e.key),
-                            trailing: Text(e.value),
-                          ))
-                      .toList()
-                ],
+      appBar: AppBar(title: Text('Laporan Nilai - $studentName')),
+      body: ListView.builder(
+        itemCount: grades.length,
+        itemBuilder: (context, index) {
+          final g = grades[index];
+          return Card(
+            child: ListTile(
+              leading: const Icon(Icons.assignment, color: Colors.blueAccent),
+              title: Text('${g['subject']} (${g['type']})'),
+              trailing: Text(
+                '${g['score']}',
+                style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
               ),
             ),
-          ),
-        ],
+          );
+        },
       ),
     );
   }

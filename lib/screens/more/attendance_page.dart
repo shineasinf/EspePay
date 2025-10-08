@@ -1,29 +1,46 @@
 import 'package:flutter/material.dart';
 
 class AttendancePage extends StatelessWidget {
-  const AttendancePage({super.key});
+  final String studentName;
+
+  const AttendancePage({super.key, required this.studentName}); // ← tambahkan parameter
 
   @override
   Widget build(BuildContext context) {
-    final rows = List.generate(7, (i) => {
-          'date': '2025-09-${10 + i}',
-          'in': '07:50',
-          'out': i % 2 == 0 ? '15:00' : '-',
-        });
+    final attendance = [
+      {'date': '01 Okt', 'subject': 'Matematika', 'status': 'Hadir'},
+      {'date': '01 Okt', 'subject': 'Bahasa Indonesia', 'status': 'Hadir'},
+      {'date': '02 Okt', 'subject': 'IPA', 'status': 'Izin'},
+    ];
+
+    Color _statusColor(String status) {
+      switch (status) {
+        case 'Hadir':
+          return Colors.green;
+        case 'Izin':
+          return Colors.orange;
+        case 'Alfa':
+          return Colors.red;
+        default:
+          return Colors.grey;
+      }
+    }
 
     return Scaffold(
-      appBar: AppBar(title: const Text('Rekap Presensi')),
-      body: ListView(
-        padding: const EdgeInsets.all(12),
-        children: rows
-            .map((r) => Card(
-                  child: ListTile(
-                    title: Text(r['date']!),
-                    subtitle:
-                        Text('Masuk: ${r['in']} • Pulang: ${r['out']}'),
-                  ),
-                ))
-            .toList(),
+      appBar: AppBar(title: Text('Absensi - $studentName')),
+      body: ListView.builder(
+        itemCount: attendance.length,
+        itemBuilder: (context, index) {
+          final a = attendance[index];
+          return Card(
+            child: ListTile(
+              leading: Icon(Icons.check_circle, color: _statusColor(a['status']!)),
+              title: Text('${a['subject']}'),
+              subtitle: Text('Tanggal: ${a['date']}'),
+              trailing: Text(a['status']!, style: TextStyle(color: _statusColor(a['status']!))),
+            ),
+          );
+        },
       ),
     );
   }

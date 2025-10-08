@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:lottie/lottie.dart';
 import 'payments_page.dart';
 
 class PaymentsSummaryPage extends StatefulWidget {
@@ -9,32 +10,54 @@ class PaymentsSummaryPage extends StatefulWidget {
 }
 
 class _PaymentsSummaryPageState extends State<PaymentsSummaryPage> {
-  final PageController _pageController = PageController(viewportFraction: 0.9);
-  int _currentPage = 0;
-
   final List<Map<String, dynamic>> children = [
     {
       'name': 'Bayu Perdana Putra',
-      'photo': 'https://i.pravatar.cc/200?img=3',
-      'totalTagihan': 10,
-      'totalBayar': 8,
-      'totalBelum': 2,
-      'totalNominal': 5000000,
-      'status': 'BELUM BAYAR',
+      'shortName': 'Bayu',
+      'class': 'Kelas 3A',
+      'status': 'LUNAS',
+      'gender': 'M',
+      'total': 5000000,
+      'paid': 5000000,
+      'unpaid': 0,
+      'itemsTotal': 10,
+      'itemsPaid': 10,
+      'itemsUnpaid': 0,
     },
     {
       'name': 'Inggrid Zyra Aeryn',
-      'photo': 'https://i.pravatar.cc/200?img=5',
-      'totalTagihan': 5,
-      'totalBayar': 5,
-      'totalBelum': 0,
-      'totalNominal': 2500000,
-      'status': 'LUNAS',
-    },
+      'shortName': 'Inggrid',
+      'class': 'Kelas 1A',
+      'status': 'BELUM BAYAR',
+      'gender': 'F',
+      'total': 5000000,
+      'paid': 4000000,
+      'unpaid': 1000000,
+      'itemsTotal': 10,
+      'itemsPaid': 8,
+      'itemsUnpaid': 2,
+    }
   ];
+
+  late Map<String, dynamic> selectedChild;
+
+  @override
+  void initState() {
+    super.initState();
+    selectedChild = children.first;
+  }
+
+  String _formatCurrency(int value) {
+    return value.toString().replaceAllMapped(
+        RegExp(r'(\d)(?=(\d{3})+(?!\d))'), (match) => '${match[1]}.');
+  }
 
   @override
   Widget build(BuildContext context) {
+    final total = selectedChild['total'] as int;
+    final paid = selectedChild['paid'] as int;
+    final unpaid = selectedChild['unpaid'] as int;
+
     return Scaffold(
       backgroundColor: const Color(0xFFF9F6FB),
       appBar: AppBar(
@@ -66,155 +89,206 @@ class _PaymentsSummaryPageState extends State<PaymentsSummaryPage> {
       ),
       body: Column(
         children: [
-          Expanded(
-            child: PageView.builder(
-              controller: _pageController,
-              itemCount: children.length,
-              onPageChanged: (i) => setState(() => _currentPage = i),
-              itemBuilder: (context, index) {
-                final c = children[index];
-                return AnimatedScale(
-                  scale: index == _currentPage ? 1 : 0.95,
-                  duration: const Duration(milliseconds: 300),
-                  child: _buildChildSummaryCard(c),
-                );
-              },
+          // === Bagian avatar anak scroll horizontal ===
+          SizedBox(
+            height: 120,
+            child: SingleChildScrollView(
+              scrollDirection: Axis.horizontal,
+              padding: const EdgeInsets.symmetric(horizontal: 16),
+              child: Row(
+                children: children.map((c) {
+                  final isSelected = selectedChild['name'] == c['name'];
+                  return GestureDetector(
+                    onTap: () => setState(() => selectedChild = c),
+                    child: Padding(
+                      padding: const EdgeInsets.symmetric(horizontal: 8),
+                      child: Column(
+                        children: [
+                          CircleAvatar(
+                            radius: isSelected ? 38 : 32,
+                            backgroundColor:
+                                isSelected ? Colors.red.shade100 : Colors.grey.shade200,
+                            child: CircleAvatar(
+                              radius: isSelected ? 34 : 28,
+                              backgroundImage: AssetImage(
+                                c['gender'] == 'M'
+                                    ? 'assets/icons/boy.png'
+                                    : 'assets/icons/girl.png',
+                              ),
+                            ),
+                          ),
+                          const SizedBox(height: 6),
+                          Text(
+                            c['shortName'] ?? '',
+                            style: TextStyle(
+                              fontSize: 13,
+                              fontWeight: isSelected ? FontWeight.bold : FontWeight.normal,
+                              color: isSelected ? Colors.red : Colors.black87,
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                  );
+                }).toList(),
+              ),
             ),
           ),
-          const SizedBox(height: 12),
-          Row(
-            mainAxisAlignment: MainAxisAlignment.center,
-            children: List.generate(children.length, (index) {
-              return AnimatedContainer(
-                duration: const Duration(milliseconds: 300),
-                margin: const EdgeInsets.symmetric(horizontal: 4),
-                width: _currentPage == index ? 24 : 8,
-                height: 8,
-                decoration: BoxDecoration(
-                  color: _currentPage == index
-                      ? const Color(0xFFE53835)
-                      : Colors.grey.shade400,
-                  borderRadius: BorderRadius.circular(12),
+
+          // === Konten ringkasan tagihan ===
+          Expanded(
+            child: SingleChildScrollView(
+              padding: const EdgeInsets.all(16),
+              child: Card(
+                color: const Color(0xFFFAFAF0), // putih tulang
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(16),
                 ),
-              );
-            }),
-          ),
-          const SizedBox(height: 20),
+                elevation: 3,
+                child: Padding(
+                  padding: const EdgeInsets.all(24),
+                  child: Column(
+                    children: [
+                      // animasi avatar lottie besar
+                      Lottie.asset(
+                        selectedChild['gender'] == 'M'
+                            ? 'assets/animations/profile_avatar_boy.json'
+                            : 'assets/animations/profile_avatar_girl.json',
+                        height: 160, // 🔥 diperbesar
+                        repeat: true,
+                      ),
+                      const SizedBox(height: 8),
+                      Text(
+                        selectedChild['name'],
+                        style: const TextStyle(
+                            fontSize: 20, fontWeight: FontWeight.bold),
+                      ),
+                      const SizedBox(height: 4),
+                      Text(
+                        selectedChild['class'],
+                        style:
+                            const TextStyle(fontSize: 16, color: Colors.black54),
+                      ),
+                      const SizedBox(height: 16),
+
+                      // angka total item
+                      Row(
+                        mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+                        children: [
+                          _statNumber("${selectedChild['itemsTotal']} item",
+                              "Total Tagihan"),
+                          _statNumber("${selectedChild['itemsPaid']} item",
+                              "Sudah Bayar"),
+                          _statNumber("${selectedChild['itemsUnpaid']} item",
+                              "Belum Bayar"),
+                        ],
+                      ),
+                      const SizedBox(height: 20),
+
+                      // Total & Sudah dibayar side by side
+                      Container(
+                        decoration: BoxDecoration(
+                          color: Colors.grey.shade100,
+                          borderRadius: BorderRadius.circular(12),
+                        ),
+                        padding: const EdgeInsets.symmetric(
+                            vertical: 16, horizontal: 12),
+                        child: Row(
+                          mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+                          children: [
+                            Column(
+                              children: [
+                                const Text("Total Tagihan",
+                                    style: TextStyle(fontSize: 14)),
+                                const SizedBox(height: 4),
+                                Text(
+                                  "Rp ${_formatCurrency(total)}",
+                                  style: const TextStyle(
+                                    fontWeight: FontWeight.bold,
+                                    fontSize: 16,
+                                  ),
+                                ),
+                              ],
+                            ),
+                            Container(width: 1, height: 40, color: Colors.grey.shade300),
+                            Column(
+                              children: [
+                                const Text("Sudah Dibayar",
+                                    style: TextStyle(fontSize: 14)),
+                                const SizedBox(height: 4),
+                                Text(
+                                  "Rp ${_formatCurrency(paid)}",
+                                  style: const TextStyle(
+                                    fontWeight: FontWeight.bold,
+                                    fontSize: 16,
+                                    color: Colors.green,
+                                  ),
+                                ),
+                              ],
+                            ),
+                          ],
+                        ),
+                      ),
+                      const SizedBox(height: 20),
+
+                      Text(
+                        "Tagihan Baru: Rp ${_formatCurrency(unpaid)}",
+                        style: TextStyle(
+                          fontSize: 20,
+                          fontWeight: FontWeight.bold,
+                          color: unpaid > 0 ? Colors.red : Colors.green,
+                        ),
+                      ),
+
+                      const SizedBox(height: 24),
+                      SizedBox(
+                        width: double.infinity,
+                        child: ElevatedButton.icon(
+                          onPressed: () {
+                            Navigator.push(
+                              context,
+                              MaterialPageRoute(
+                                builder: (_) => PaymentsPage(
+                                  studentName: selectedChild['name'],
+                                  status: selectedChild['status'],
+                                ),
+                              ),
+                            );
+                          },
+                          style: ElevatedButton.styleFrom(
+                            backgroundColor: const Color(0xFFE53835),
+                            foregroundColor: Colors.white,
+                            padding: const EdgeInsets.symmetric(vertical: 14),
+                            shape: RoundedRectangleBorder(
+                              borderRadius: BorderRadius.circular(30),
+                            ),
+                          ),
+                          icon: const Icon(Icons.receipt_long),
+                          label: const Text(
+                            "Lihat Tagihan",
+                            style: TextStyle(fontSize: 16),
+                          ),
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+              ),
+            ),
+          )
         ],
       ),
     );
   }
 
-  Widget _buildChildSummaryCard(Map<String, dynamic> c) {
-    return Card(
-      margin: const EdgeInsets.symmetric(vertical: 20, horizontal: 8),
-      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
-      elevation: 5,
-      child: Padding(
-        padding: const EdgeInsets.all(16),
-        child: Column(
-          mainAxisAlignment: MainAxisAlignment.spaceBetween,
-          children: [
-            // Foto anak
-            ClipRRect(
-              borderRadius: BorderRadius.circular(16),
-              child: Image.network(
-                c['photo'],
-                height: 120,
-                width: double.infinity,
-                fit: BoxFit.cover,
-              ),
-            ),
-            const SizedBox(height: 12),
-
-            // Nama anak
-            Text(
-              c['name'],
-              textAlign: TextAlign.center,
-              style: const TextStyle(
-                fontSize: 20,
-                fontWeight: FontWeight.bold,
-              ),
-            ),
-            const SizedBox(height: 16),
-
-            // Ringkasan tagihan
-            Row(
-              mainAxisAlignment: MainAxisAlignment.spaceAround,
-              children: [
-                _infoBox("Total Tagihan", "${c['totalTagihan']} item"),
-                _infoBox("Sudah Bayar", "${c['totalBayar']} item"),
-                _infoBox("Belum Bayar", "${c['totalBelum']} item"),
-              ],
-            ),
-            const SizedBox(height: 12),
-
-            Text(
-              "Total: Rp ${c['totalNominal'].toString().replaceAllMapped(
-                RegExp(r'(\d)(?=(\d{3})+(?!\d))'),
-                (m) => '${m[1]}.',
-              )}",
-              style: const TextStyle(
-                fontSize: 22,
-                fontWeight: FontWeight.bold,
-                color: Colors.teal,
-              ),
-            ),
-
-            const SizedBox(height: 16),
-
-            // Tombol lihat tagihan
-            SizedBox(
-              width: double.infinity,
-              child: ElevatedButton.icon(
-                onPressed: () {
-                  Navigator.push(
-                    context,
-                    MaterialPageRoute(
-                      builder: (_) => PaymentsPage(
-                        studentName: c['name'],
-                        status: c['status'],
-                      ),
-                    ),
-                  );
-                },
-                icon: const Icon(Icons.receipt_long),
-                label: const Text("Lihat Tagihan"),
-                style: ElevatedButton.styleFrom(
-                  backgroundColor: const Color(0xFFE53835),
-                  foregroundColor: Colors.white,
-                  padding: const EdgeInsets.symmetric(vertical: 14),
-                  shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(16),
-                  ),
-                  textStyle: const TextStyle(
-                    fontSize: 18,
-                    fontWeight: FontWeight.bold,
-                  ),
-                ),
-              ),
-            ),
-          ],
-        ),
-      ),
-    );
-  }
-
-  Widget _infoBox(String title, String value) {
+  Widget _statNumber(String number, String label) {
     return Column(
       children: [
-        Text(
-          value,
-          style: const TextStyle(
-            fontSize: 16,
-            fontWeight: FontWeight.bold,
-          ),
-        ),
-        const SizedBox(height: 4),
-        Text(
-          title,
-          style: const TextStyle(fontSize: 12, color: Colors.black54),
-        ),
+        Text(number,
+            style: const TextStyle(
+                fontSize: 16, fontWeight: FontWeight.bold)),
+        const SizedBox(height: 2),
+        Text(label, style: const TextStyle(fontSize: 12, color: Colors.black54)),
       ],
     );
   }

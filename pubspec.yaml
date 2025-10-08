@@ -81,6 +81,10 @@ flutter:
     - assets/icons/xolana_icon.png
     - assets/animations/xolana_splash.json
     - assets/icons/xolana_icon.json
+    - assets/animations/profile_avatar_boy.json
+    - assets/animations/profile_avatar_girl.json
+    - assets/icons/boy.png
+    - assets/icons/girl.png
 
   # An image asset can refer to one or more resolution-specific "variants", see
   # https://flutter.dev/to/resolution-aware-images
